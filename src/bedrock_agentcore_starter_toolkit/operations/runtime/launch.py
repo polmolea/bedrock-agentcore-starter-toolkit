@@ -1009,6 +1009,18 @@ def _execute_codebuild_workflow(
         if hasattr(agent_config, "codebuild") and agent_config.codebuild.project_name:
             log.info("Using CodeBuild project from config: %s", agent_config.codebuild.project_name)
             project_name = agent_config.codebuild.project_name
+        elif hasattr(agent_config, "codebuild_network") and agent.config.codebuild_network.vpc_id and agent.config.codebuild_network.subnet_ids and agent.config.codebuild_network.security_group_ids:
+            project_name = codebuild_service.create_or_update_project(
+                agent_name=agent_name,
+                ecr_repository_uri=ecr_uri,
+                execution_role=codebuild_execution_role,
+                source_location=source_location,
+                vpc_id=agent.config.codebuild_network.vpc_id,
+                subnet_ids=agent.config.codebuild_network.subnet_ids.split(","),
+                security_group_ids=agent.config.codebuild_network.security_group_ids(","),
+            )
+            if project_name:
+                created_resources.append(f"CodeBuild Project: {project_name}")
         else:
             project_name = codebuild_service.create_or_update_project(
                 agent_name=agent_name,

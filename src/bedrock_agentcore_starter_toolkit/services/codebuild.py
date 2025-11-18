@@ -157,7 +157,7 @@ class CodeBuildService:
         )
 
     def create_or_update_project(
-        self, agent_name: str, ecr_repository_uri: str, execution_role: str, source_location: str
+        self, agent_name: str, ecr_repository_uri: str, execution_role: str, source_location: str, vpc_id: Optional[str], subnet_ids: Optional[List[str]], security_group_ids: Optional[List[str]]
     ) -> str:
         """Create or update CodeBuild project for ARM64 builds."""
         project_name = f"bedrock-agentcore-{sanitize_ecr_repo_name(agent_name)}-builder"
@@ -185,6 +185,13 @@ class CodeBuildService:
             },
             "serviceRole": execution_role,
         }
+
+        if vpc_id is not None and subnet_ids is not None and security_group_ids is not None:
+            project_config["vpcConfig"] = {
+                "vpcId": vpc_id,
+                "subnets": subnet_ids,
+                "securityGroupIds": security_group_ids,
+            }
 
         try:
             self.client.create_project(**project_config)
